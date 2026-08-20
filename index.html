@@ -105,31 +105,77 @@
       margin: 12px 0 0;
       font-size: 13px;
     }
+    .sidebar-mask {
+      display: none;
+    }
     @media screen and (max-width: 768px) {
+      .sidebar {
+        left: auto !important;
+        right: 0 !important;
+        transform: translateX(100%) !important;
+        box-shadow: -6px 0 24px rgba(0, 0, 0, 0.12);
+        z-index: 95 !important;
+      }
+      body:not(.close) .sidebar {
+        transform: translateX(0) !important;
+      }
+      body.close .sidebar {
+        transform: translateX(100%) !important;
+      }
+      body:not(.close) .sidebar-mask {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 90;
+      }
       .sidebar-toggle {
         position: fixed !important;
         top: 10px !important;
-        left: 10px !important;
+        right: 10px !important;
+        left: auto !important;
         bottom: auto !important;
         width: auto !important;
         height: 44px !important;
-        padding: 0 14px 0 10px !important;
+        padding: 0 12px !important;
         background: #42b983 !important;
         border-radius: 8px !important;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
         display: flex !important;
+        flex-direction: row !important;
         align-items: center !important;
+        justify-content: center !important;
+        gap: 8px;
         z-index: 100;
+      }
+      .sidebar-toggle-button {
+        position: relative !important;
+        order: 2;
+        width: 18px !important;
+        height: 14px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex-shrink: 0;
       }
       .sidebar-toggle span {
         background-color: #fff !important;
+        position: absolute !important;
+        left: 0 !important;
+        width: 18px !important;
+        height: 2px !important;
+        margin: 0 !important;
       }
+      .sidebar-toggle span:nth-child(1) { top: 0 !important; }
+      .sidebar-toggle span:nth-child(2) { top: 6px !important; }
+      .sidebar-toggle span:nth-child(3) { top: 12px !important; }
       .sidebar-toggle::after {
         content: "目录";
+        order: 1;
         color: #fff;
         font-size: 16px;
         font-weight: 700;
-        margin-left: 8px;
+        line-height: 14px;
+        margin: 0;
       }
       .markdown-section {
         padding-top: 64px;
@@ -159,6 +205,19 @@
       homepage: 'README.md',
       plugins: [
         function (hook) {
+          hook.ready(function () {
+            if (document.querySelector('.sidebar-mask')) return
+            var mask = document.createElement('div')
+            mask.className = 'sidebar-mask'
+            document.body.appendChild(mask)
+            mask.addEventListener('click', function () {
+              document.body.classList.add('close')
+            })
+            document.body.addEventListener('click', function (e) {
+              var link = e.target.closest && e.target.closest('.sidebar-nav a')
+              if (link) document.body.classList.add('close')
+            })
+          })
           hook.doneEach(function () {
             var root = document.querySelector('.markdown-section')
             if (!root) return
