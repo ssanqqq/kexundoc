@@ -105,7 +105,38 @@
       margin: 12px 0 0;
       font-size: 13px;
     }
+    #toc-dropdown {
+      display: none;
+      position: fixed;
+      top: 58px;
+      left: 10px;
+      min-width: 240px;
+      max-width: calc(100vw - 20px);
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+      z-index: 200;
+      padding: 6px 0;
+    }
+    #toc-dropdown.show {
+      display: block;
+    }
+    #toc-dropdown a {
+      display: block;
+      padding: 12px 16px;
+      color: #2c3e50;
+      font-size: 15px;
+      text-decoration: none;
+    }
+    #toc-dropdown a.active {
+      color: #42b983;
+      font-weight: 600;
+    }
     @media screen and (max-width: 768px) {
+      .sidebar {
+        display: none !important;
+      }
       .content,
       body.close .content,
       body:not(.close) .content {
@@ -113,41 +144,8 @@
         left: 0 !important;
         max-width: 100% !important;
       }
-      .sidebar {
-        position: fixed !important;
-        top: 56px !important;
-        bottom: auto !important;
-        left: auto !important;
-        right: 12px !important;
-        width: 230px !important;
-        max-width: calc(100vw - 24px) !important;
-        height: auto !important;
-        max-height: calc(100vh - 72px) !important;
-        padding: 12px 0 !important;
-        background: #fff !important;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 10px !important;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
-        transform: translateY(-8px) scale(0.98) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        z-index: 95 !important;
-      }
-      .sidebar .app-name,
-      .sidebar > h1 {
-        display: none !important;
-      }
-      body:not(.close) .sidebar {
-        transform: none !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-      }
-      body.close .sidebar {
-        transform: translateY(-8px) scale(0.98) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-      }
       .sidebar-toggle,
+      body.close .sidebar-toggle,
       body:not(.close) .sidebar-toggle {
         position: fixed !important;
         top: 10px !important;
@@ -165,7 +163,7 @@
         align-items: center !important;
         justify-content: center !important;
         gap: 8px;
-        z-index: 100;
+        z-index: 210;
       }
       .sidebar-toggle-button {
         position: relative !important;
@@ -196,9 +194,6 @@
         line-height: 14px;
         margin: 0;
       }
-      body:not(.close) .content {
-        opacity: 1 !important;
-      }
       .markdown-section {
         padding-top: 64px;
       }
@@ -214,6 +209,7 @@
 </head>
 <body>
   <div id="app">加载中…</div>
+  <div id="toc-dropdown"></div>
   <div id="img-preview">
     <img alt="预览" />
     <p>点击空白处关闭</p>
@@ -227,16 +223,47 @@
       homepage: 'README.md',
       plugins: [
         function (hook) {
-          hook.ready(function () {
-            if (window.innerWidth <= 768) {
-              document.body.classList.add('close')
-            }
-            document.body.addEventListener('click', function (e) {
-              var link = e.target.closest && e.target.closest('.sidebar-nav a')
-              if (link) document.body.classList.add('close')
+          function isMobile() {
+            return window.innerWidth <= 768
+          }
+          function fillDropdown() {
+            var menu = document.getElementById('toc-dropdown')
+            if (!menu) return
+            var links = document.querySelectorAll('.sidebar-nav a')
+            menu.innerHTML = ''
+            links.forEach(function (a) {
+              var item = document.createElement('a')
+              item.href = a.getAttribute('href') || '#'
+              item.textContent = (a.textContent || '').trim()
+              if (a.classList.contains('active') || a.getAttribute('href') === location.hash) {
+                item.className = 'active'
+              }
+              item.addEventListener('click', function () {
+                menu.classList.remove('show')
+              })
+              menu.appendChild(item)
             })
+          }
+          hook.ready(function () {
+            document.body.classList.add('close')
+            var menu = document.getElementById('toc-dropdown')
+            document.addEventListener('click', function (e) {
+              var toggle = e.target.closest && e.target.closest('.sidebar-toggle')
+              if (toggle) {
+                if (!isMobile()) return
+                e.preventDefault()
+                e.stopPropagation()
+                fillDropdown()
+                menu.classList.toggle('show')
+                document.body.classList.add('close')
+                return
+              }
+              if (!menu.contains(e.target)) menu.classList.remove('show')
+            }, true)
           })
           hook.doneEach(function () {
+            document.body.classList.add('close')
+            fillDropdown()
             var root = document.querySelector('.markdown-section')
             if (!root) return
 
