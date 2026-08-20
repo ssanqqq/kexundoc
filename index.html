@@ -6,8 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css" />
   <style>
+    .doc-list p {
+      margin: 0;
+    }
     .doc-list a {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       padding: 16px 18px;
       margin: 12px 0;
       background: #f4faf7;
@@ -18,6 +24,14 @@
       font-weight: 600;
       text-decoration: none;
     }
+    .doc-list a::after {
+      content: "›";
+      flex-shrink: 0;
+      color: #42b983;
+      font-size: 26px;
+      font-weight: 400;
+      line-height: 1;
+    }
     .doc-list a:hover {
       background: #e8f7ef;
       color: #42b983;
@@ -27,15 +41,25 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      margin: 12px 0;
+      padding: 14px 16px;
+      background: #f4faf7;
+      border: 1px solid #d7efe4;
+      border-radius: 10px;
+      cursor: pointer;
     }
     .markdown-section h4.method-head a {
       flex: 1;
       min-width: 0;
+      font-size: 15px;
+      font-weight: 600;
+      pointer-events: none;
     }
     .method-toggle {
       flex-shrink: 0;
-      padding: 6px 16px;
-      border: 1px solid #42b983;
+      min-width: 64px;
+      padding: 6px 14px;
+      border: none;
       background: #42b983;
       color: #fff;
       border-radius: 6px;
@@ -43,12 +67,43 @@
       font-size: 14px;
       line-height: 1.4;
     }
-    .method-toggle.is-collapsed {
-      background: #fff;
-      color: #42b983;
-    }
     .method-body.is-collapsed {
       display: none;
+    }
+    .markdown-section img {
+      cursor: zoom-in;
+      border-radius: 6px;
+    }
+    .img-hint {
+      margin: 0 0 16px;
+      color: #888;
+      font-size: 12px;
+      text-align: center;
+    }
+    #img-preview {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.88);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 16px;
+    }
+    #img-preview.show {
+      display: flex;
+    }
+    #img-preview img {
+      max-width: 100%;
+      max-height: 85vh;
+      object-fit: contain;
+      cursor: default;
+    }
+    #img-preview p {
+      color: #fff;
+      margin: 12px 0 0;
+      font-size: 13px;
     }
     @media screen and (max-width: 768px) {
       .sidebar-toggle {
@@ -79,11 +134,22 @@
       .markdown-section {
         padding-top: 64px;
       }
+      .markdown-section h1 {
+        font-size: 22px;
+      }
+      .markdown-section h2,
+      .markdown-section h3 {
+        font-size: 17px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="app">加载中…</div>
+  <div id="img-preview">
+    <img alt="预览" />
+    <p>点击空白处关闭</p>
+  </div>
   <script>
     window.$docsify = {
       name: '科讯知识库',
@@ -96,6 +162,7 @@
           hook.doneEach(function () {
             var root = document.querySelector('.markdown-section')
             if (!root) return
+
             root.querySelectorAll('h4').forEach(function (h4) {
               var text = (h4.textContent || '').replace(/\s+/g, '')
               if (text.indexOf('方式') !== 0) return
@@ -103,7 +170,7 @@
 
               h4.classList.add('method-head')
               var body = document.createElement('div')
-              body.className = 'method-body'
+              body.className = 'method-body is-collapsed'
               var node = h4.nextSibling
               while (node) {
                 var next = node.nextSibling
@@ -113,20 +180,47 @@
               }
               h4.after(body)
 
-              body.classList.add('is-collapsed')
               var btn = document.createElement('button')
               btn.type = 'button'
-              btn.className = 'method-toggle is-collapsed'
+              btn.className = 'method-toggle'
               btn.textContent = '展开'
               h4.appendChild(btn)
-              btn.addEventListener('click', function (e) {
+
+              h4.addEventListener('click', function (e) {
                 e.preventDefault()
-                e.stopPropagation()
                 var collapsed = body.classList.toggle('is-collapsed')
-                btn.classList.toggle('is-collapsed', collapsed)
                 btn.textContent = collapsed ? '展开' : '收起'
               })
             })
+
+            var preview = document.getElementById('img-preview')
+            var previewImg = preview.querySelector('img')
+            preview.onclick = function (e) {
+              if (e.target === previewImg) return
+              preview.classList.remove('show')
+            }
+            root.querySelectorAll('img').forEach(function (img) {
+              if (img.dataset.zoom === '1') return
+              img.dataset.zoom = '1'
+              img.addEventListener('click', function () {
+                previewImg.src = img.src
+                preview.classList.add('show')
+              })
+            })
+            if (root.querySelector('img') && !root.querySelector('.img-hint')) {
+              var hint = document.createElement('p')
+              hint.className = 'img-hint'
+              var firstMethod = root.querySelector('h4.method-head')
+              if (firstMethod) {
+                hint.textContent = '展开后可点击图片放大查看'
+                firstMethod.before(hint)
+              } else {
+                hint.textContent = '点击图片可放大查看'
+                var h1 = root.querySelector('h1')
+                if (h1) h1.after(hint)
+                else root.prepend(hint)
+              }
+            }
           })
         }
       ]
