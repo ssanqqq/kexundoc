@@ -22,6 +22,34 @@
       background: #e8f7ef;
       color: #42b983;
     }
+    .markdown-section h4.method-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .markdown-section h4.method-head a {
+      flex: 1;
+      min-width: 0;
+    }
+    .method-toggle {
+      flex-shrink: 0;
+      padding: 6px 16px;
+      border: 1px solid #42b983;
+      background: #42b983;
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .method-toggle.is-collapsed {
+      background: #fff;
+      color: #42b983;
+    }
+    .method-body.is-collapsed {
+      display: none;
+    }
     @media screen and (max-width: 768px) {
       .sidebar-toggle {
         position: fixed !important;
@@ -62,7 +90,45 @@
       loadSidebar: true,
       subMaxLevel: 2,
       auto2top: true,
-      homepage: 'README.md'
+      homepage: 'README.md',
+      plugins: [
+        function (hook) {
+          hook.doneEach(function () {
+            var root = document.querySelector('.markdown-section')
+            if (!root) return
+            root.querySelectorAll('h4').forEach(function (h4) {
+              var text = (h4.textContent || '').replace(/\s+/g, '')
+              if (text.indexOf('方式') !== 0) return
+              if (h4.querySelector('.method-toggle')) return
+
+              h4.classList.add('method-head')
+              var body = document.createElement('div')
+              body.className = 'method-body'
+              var node = h4.nextSibling
+              while (node) {
+                var next = node.nextSibling
+                if (node.nodeType === 1 && /^H[1-4]$/.test(node.tagName)) break
+                body.appendChild(node)
+                node = next
+              }
+              h4.after(body)
+
+              var btn = document.createElement('button')
+              btn.type = 'button'
+              btn.className = 'method-toggle'
+              btn.textContent = '收起'
+              h4.appendChild(btn)
+              btn.addEventListener('click', function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                var collapsed = body.classList.toggle('is-collapsed')
+                btn.classList.toggle('is-collapsed', collapsed)
+                btn.textContent = collapsed ? '展开' : '收起'
+              })
+            })
+          })
+        }
+      ]
     }
   </script>
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
