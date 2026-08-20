@@ -110,11 +110,23 @@
     }
     @media screen and (max-width: 768px) {
       .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
         left: auto !important;
         right: 0 !important;
+        width: 78% !important;
+        max-width: 300px !important;
+        height: 100% !important;
+        padding-top: 16px !important;
+        background: #fff !important;
         transform: translateX(100%) !important;
         box-shadow: -6px 0 24px rgba(0, 0, 0, 0.12);
         z-index: 95 !important;
+      }
+      .sidebar .app-name,
+      .sidebar > h1 {
+        display: none !important;
       }
       body:not(.close) .sidebar {
         transform: translateX(0) !important;
@@ -132,8 +144,8 @@
       .sidebar-toggle {
         position: fixed !important;
         top: 10px !important;
-        right: 10px !important;
-        left: auto !important;
+        left: 10px !important;
+        right: auto !important;
         bottom: auto !important;
         width: auto !important;
         height: 44px !important;
