@@ -105,9 +105,6 @@
       margin: 12px 0 0;
       font-size: 13px;
     }
-    .sidebar-mask {
-      display: none;
-    }
     @media screen and (max-width: 768px) {
       .sidebar {
         position: fixed !important;
@@ -134,14 +131,8 @@
       body.close .sidebar {
         transform: translateX(100%) !important;
       }
-      body:not(.close) .sidebar-mask {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.4);
-        z-index: 90;
-      }
-      .sidebar-toggle {
+      .sidebar-toggle,
+      body:not(.close) .sidebar-toggle {
         position: fixed !important;
         top: 10px !important;
         left: 10px !important;
@@ -189,6 +180,9 @@
         line-height: 14px;
         margin: 0;
       }
+      body:not(.close) .content {
+        opacity: 1 !important;
+      }
       .markdown-section {
         padding-top: 64px;
       }
@@ -218,13 +212,6 @@
       plugins: [
         function (hook) {
           hook.ready(function () {
-            if (document.querySelector('.sidebar-mask')) return
-            var mask = document.createElement('div')
-            mask.className = 'sidebar-mask'
-            document.body.appendChild(mask)
-            mask.addEventListener('click', function () {
-              document.body.classList.add('close')
-            })
             document.body.addEventListener('click', function (e) {
               var link = e.target.closest && e.target.closest('.sidebar-nav a')
               if (link) document.body.classList.add('close')
