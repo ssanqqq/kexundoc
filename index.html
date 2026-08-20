@@ -113,10 +113,11 @@
               }
               h4.after(body)
 
+              body.classList.add('is-collapsed')
               var btn = document.createElement('button')
               btn.type = 'button'
-              btn.className = 'method-toggle'
-              btn.textContent = '收起'
+              btn.className = 'method-toggle is-collapsed'
+              btn.textContent = '展开'
               h4.appendChild(btn)
               btn.addEventListener('click', function (e) {
                 e.preventDefault()
