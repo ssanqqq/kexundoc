@@ -291,19 +291,26 @@
           function fillDropdown() {
             var menu = document.getElementById('toc-dropdown')
             if (!menu) return
-            var links = document.querySelectorAll('.sidebar-nav a')
-            menu.innerHTML = ''
-            links.forEach(function (a) {
-              var item = document.createElement('a')
-              item.href = a.getAttribute('href') || '#'
-              item.textContent = (a.textContent || '').trim()
-              if (a.classList.contains('active') || a.getAttribute('href') === location.hash) {
-                item.className = 'active'
+            fetch('_sidebar.md', { cache: 'no-store' }).then(function (res) {
+              return res.text()
+            }).then(function (text) {
+              menu.innerHTML = ''
+              var re = /\[([^\]]+)\]\(([^)]+)\)/g
+              var match
+              while ((match = re.exec(text))) {
+                var item = document.createElement('a')
+                var href = match[2]
+                if (href === '/') item.href = '#/'
+                else item.href = '#/' + decodeURIComponent(href).replace(/\.md$/i, '')
+                item.textContent = match[1]
+                var current = decodeURIComponent((location.hash || '#/').replace(/^#\/?/, '')).replace(/\.md$/i, '')
+                var target = decodeURIComponent(item.href.replace(/^[^#]*#\/?/, '')).replace(/\.md$/i, '')
+                if (current === target || (current === '' && target === '')) item.className = 'active'
+                item.addEventListener('click', function () {
+                  menu.classList.remove('show')
+                })
+                menu.appendChild(item)
               }
-              item.addEventListener('click', function () {
-                menu.classList.remove('show')
-              })
-              menu.appendChild(item)
             })
           }
           hook.ready(function () {
