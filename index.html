@@ -86,24 +86,60 @@
       inset: 0;
       z-index: 9999;
       background: rgba(0, 0, 0, 0.88);
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      padding: 16px;
+      padding: 16px 16px 72px;
     }
     #img-preview.show {
       display: flex;
     }
+    #img-preview .img-preview-stage {
+      width: 100%;
+      max-height: calc(100vh - 100px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
     #img-preview img {
       max-width: 100%;
-      max-height: 85vh;
+      max-height: calc(100vh - 120px);
       object-fit: contain;
       cursor: default;
+    }
+    #img-preview.is-zoomed img {
+      max-width: none;
+      max-height: none;
+      width: 220%;
+      height: auto;
     }
     #img-preview p {
       color: #fff;
       margin: 12px 0 0;
       font-size: 13px;
+      flex-shrink: 0;
+    }
+    #img-zoom-btn {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 10001;
+      display: none;
+      min-width: 72px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #42b983;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    }
+    #img-preview.show #img-zoom-btn {
+      display: block;
     }
     #toc-dropdown {
       display: none;
@@ -212,8 +248,11 @@
   <div id="app">加载中…</div>
   <div id="toc-dropdown"></div>
   <div id="img-preview">
-    <img alt="预览" />
+    <div class="img-preview-stage">
+      <img alt="预览" />
+    </div>
     <p>点击空白处关闭</p>
+    <button type="button" id="img-zoom-btn">放大</button>
   </div>
   <script>
     window.$docsify = {
@@ -224,6 +263,31 @@
       homepage: 'README.md',
       plugins: [
         function (hook) {
+          var preview = document.getElementById('img-preview')
+          var previewImg = preview.querySelector('img')
+          var zoomBtn = document.getElementById('img-zoom-btn')
+          var zoomed = false
+          function setPreviewZoom(on) {
+            zoomed = on
+            preview.classList.toggle('is-zoomed', on)
+            zoomBtn.textContent = on ? '缩小' : '放大'
+          }
+          zoomBtn.addEventListener('click', function (e) {
+            e.stopPropagation()
+            setPreviewZoom(!zoomed)
+          })
+          preview.addEventListener('click', function (e) {
+            if (e.target === previewImg || e.target === zoomBtn) return
+            preview.classList.remove('show')
+            setPreviewZoom(false)
+          })
+          window._kexunPreview = {
+            open: function (src) {
+              previewImg.src = src
+              setPreviewZoom(false)
+              preview.classList.add('show')
+            }
+          }
           function fillDropdown() {
             var menu = document.getElementById('toc-dropdown')
             if (!menu) return
@@ -295,17 +359,11 @@
             })
 
             var preview = document.getElementById('img-preview')
-            var previewImg = preview.querySelector('img')
-            preview.onclick = function (e) {
-              if (e.target === previewImg) return
-              preview.classList.remove('show')
-            }
             root.querySelectorAll('img').forEach(function (img) {
               if (img.dataset.zoom === '1') return
               img.dataset.zoom = '1'
               img.addEventListener('click', function () {
-                previewImg.src = img.src
-                preview.classList.add('show')
+                if (window._kexunPreview) window._kexunPreview.open(img.src)
               })
             })
             if (root.querySelector('img') && !root.querySelector('.img-hint')) {
